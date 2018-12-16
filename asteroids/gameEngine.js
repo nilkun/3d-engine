@@ -42,6 +42,15 @@ class Vector3D {
         this.z /= divisor;
 
     }
+    normalize() {
+        const magnitude = Math.sqrt(this.x*this.x + this.y * this.y + this.z * this.z);
+        if(magnitude !== 0) {
+            this.x /= magnitude;
+            this.y /= magnitude;
+            this.z /= magnitude;
+        }
+    }
+
     getDotProduct(vector2) {
         return (this.x * vector2.x + this.y * vector2.y + this.z * vector2.z);
     }
@@ -51,7 +60,8 @@ class Vector3D {
         return new Vector3D(this.x - vector.x, this.y - vector.y, this.z - vector.z);
     }
     getNormalized() {
-        return new Vector(Math.sqrt(this.x*this.x + this.y * this.y + this.z * this.z));
+        const magnitude = Math.sqrt(this.x*this.x + this.y * this.y + this.z * this.z);
+        return new Vector3D(this.x / magnitude, this.y / magnitude, this.z / magnitude);
     }
 }
 
@@ -192,24 +202,6 @@ class Testing {
             projectedTriangle.p2.z +=3;
             projectedTriangle.p3.z +=3;
             
-            // let newTriangle = translatedTriangle;
-                projectedTriangle.p1 = this.multiplyMatrixVector(projectedTriangle.p1, this.projectionMatrix);
-                projectedTriangle.p2 = this.multiplyMatrixVector(projectedTriangle.p2, this.projectionMatrix);
-                projectedTriangle.p3 = this.multiplyMatrixVector(projectedTriangle.p3, this.projectionMatrix);
-
-                // console.log(projectedTriangle.p3.z);
-                projectedTriangle.p1.x += 1;
-                projectedTriangle.p2.x += 1;
-                projectedTriangle.p3.x += 1;
-                projectedTriangle.p1.x *= .25 * this.screenWidth;
-                projectedTriangle.p1.y *= .25 * this.screenHeight;
-
-                projectedTriangle.p2.x *= .25 * this.screenWidth;
-                projectedTriangle.p2.y *= .25 * this.screenHeight;
-
-                projectedTriangle.p3.x *= .25 * this.screenWidth;
-                projectedTriangle.p3.y *= .25 * this.screenHeight;
-
             const line1 = new Vector3D(
                 projectedTriangle.p2.x - projectedTriangle.p1.x, 
                 projectedTriangle.p2.y - projectedTriangle.p1.y, 
@@ -231,21 +223,54 @@ class Testing {
             const l = Math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
             
             normal.divide(l);
-            
-            if(normal.getDotProduct(projectedTriangle.p1.getSubtracted(this.camera)) < 0) {
+
+            let dotProduct;
+            if(dotProduct = normal.getDotProduct(projectedTriangle.p1.getSubtracted(this.camera)) < 0) {
+
+            // let newTriangle = translatedTriangle;
+                projectedTriangle.p1 = this.multiplyMatrixVector(projectedTriangle.p1, this.projectionMatrix);
+                projectedTriangle.p2 = this.multiplyMatrixVector(projectedTriangle.p2, this.projectionMatrix);
+                projectedTriangle.p3 = this.multiplyMatrixVector(projectedTriangle.p3, this.projectionMatrix);
+
+                // console.log(projectedTriangle.p3.z);
+                projectedTriangle.p1.x += 1;
+                projectedTriangle.p2.x += 1;
+                projectedTriangle.p3.x += 1;
+                projectedTriangle.p1.x *= .25 * this.screenWidth;
+                projectedTriangle.p1.y *= .25 * this.screenHeight;
+
+                projectedTriangle.p2.x *= .25 * this.screenWidth;
+                projectedTriangle.p2.y *= .25 * this.screenHeight;
+
+                projectedTriangle.p3.x *= .25 * this.screenWidth;
+                projectedTriangle.p3.y *= .25 * this.screenHeight;
+
                 const lightSource = new Vector3D(0, 0, -1);
+                const l = lightSource.getNormalized();
+                // console.log(l);
+                const dp = l.getDotProduct(normal);
                         // if(normal.z < 0) {
+                const color = this.getColor(dp);
                
                 this.renderer.beginPath();
                 this.renderer.moveTo(projectedTriangle.p1.x, projectedTriangle.p1.y);
                 this.renderer.lineTo(projectedTriangle.p2.x, projectedTriangle.p2.y);
                 this.renderer.lineTo(projectedTriangle.p3.x, projectedTriangle.p3.y);
                 this.renderer.lineTo(projectedTriangle.p1.x, projectedTriangle.p1.y);
+                this.renderer.fillStyle = color;
+                this.renderer.strokeStyle = color;
                 this.renderer.fill();
                 this.renderer.stroke();
                 this.renderer.closePath();
             } 
         })
+    }
+
+    getColor(value) {
+        // console.log(value);
+        const color = value * 128;
+        //value * 255 / 2 + 127;
+        return `rgb(` + 2* color + "," +color+","+color/2+")";
     }
 
     multiplyMatrixVector(vector, matrix) {
@@ -267,4 +292,81 @@ const update = () => {
     testing.update();
 }
 
-setInterval(() => update(), 1000/24);
+// setInterval(() => update(), 1000/24);
+
+console.log("test");
+
+// let txt = '';
+// let xmlhttp = new XMLHttpRequest();
+// xmlhttp.onreadystatechange = () => {
+//   if(xmlhttp.status == 200 && xmlhttp.readyState == 4){
+//       console.log(xmlhttp);
+//     txt = xmlhttp.response;
+//     console.log("loaded...", typeof txt);
+//     let x = 0;
+//     let currentChar = txt.charAt(x);
+//     // console.log(currentChar);
+
+//     document.querySelector("body").innerHTML = txt;
+//     // while(currentChar!=="\b") console.log("hmm");
+//   }
+// };
+// xmlhttp.open("GET","Tie_Fighter.obj",true);
+
+// xmlhttp.send();
+// const modelFile = new File("Tie_Fighter.obj");
+// let contents;
+
+// const readFile = (evt) => {
+//     //Retrieve the first (and only!) File from the FileList object
+//     var f = evt.target.files[0]; 
+
+//     if (f) {
+//       var r = new FileReader();
+//       r.onload = function(e) { 
+//           contents = e.target.result;
+//         //   console.log(contents);
+//         //   fileReader.readAsArrayBuffer(contents);
+//         //   document.querySelector("body").innerHTML = contents;
+//         // alert( "Got the file.n" 
+//         //       +"name: " + f.name + "n"
+//         //       +"type: " + f.type + "n"
+//         //       +"size: " + f.size + " bytesn"
+//         //       + "starts with: " + contents.substr(1, contents.indexOf("n"))
+//         // );  
+//       }
+//       r.readAsText(f);
+//     } else { 
+//       alert("Failed to load file");
+//     }
+//   }
+
+//   document.getElementById('fileinput').addEventListener('change', readFile, false);
+
+
+// var textToWrite = "Tie_Fighter.obj";
+// var text = new Blob([textToWrite], {type:'text/plain'});
+// console.log(text);
+
+// let hi = new File()
+
+// const fileReader = new FileReader();
+// fileReader.onload = function(e) {
+//     console.log("loaded...");
+    // var arrayBuffer = reader.result;
+//   }
+
+// fileReader.readAsText(modelFile);
+
+fetch('Tie_Fighter.obj')
+  .then(response => response.text())
+  .then(text => {
+      for(let i = 0; i < text.length; i++) {
+        if(text.charAt(i)==="\r") { console.log("r is it"); break; }
+        if(text.charAt(i)==="\n") { console.log("n is it"); break };
+
+        // console.log(text.charAt(i));
+      }
+    // console.log(text);
+  } )
+  
