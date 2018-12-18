@@ -28,6 +28,11 @@ const cube = [
 
 ]
 
+class Polygon {
+    constructor(positions) {
+        this.positions = positions;
+    }
+}
 
 class Vector3D {
     constructor(x = 0, y = 0, z = 0) {
@@ -266,6 +271,111 @@ class Testing {
         })
     }
 
+    renderModel(model) {
+        console.log(model.f[0].positions.length);
+// mmm
+        let vectors = [];
+        for(let index = 0; index < model.f.length; index++) {
+            const polygons = model.f[index].positions;
+            // console.log(polygons[0]);
+            // console.log(index);
+            for(let i = 0; i < polygons.length; i++) {
+                // console.log(polygons, i);
+                vectors.push(this.multiplyMatrixVector(polygons[i], this.zRotation));
+                vectors[i] = this.multiplyMatrixVector(polygons[i], this.xRotation);
+                vectors[i].z +=3;
+                vectors[i] = this.multiplyMatrixVector(polygons[i], this.projectionMatrix);
+                vectors[i].x += 1;
+                vectors[i].x *= .25 * this.screenWidth;
+                vectors[i].y *= .25 * this.screenHeight;
+            }
+
+            let projectedPolygon = new Polygon(vectors);
+
+            // console.log(projectedTriangle.p3.z);
+
+            this.renderer.beginPath();
+            this.renderer.moveTo(projectedPolygon.positions[0].x, projectedPolygon.positions[0].y);
+
+            for (let i = 1; i < projectedPolygon.positions.length; i++) {
+                this.renderer.lineTo(projectedPolygon.positions[i].x, projectedPolygon.positions[i].y);
+            }
+
+            this.renderer.lineTo(projectedPolygon.positions[0].x, projectedPolygon.positions[0].y);
+            // this.renderer.fillStyle = "red"; //color;
+            this.renderer.strokeStyle = "black"; //color;
+            // this.renderer.fill();
+            this.renderer.stroke();
+            this.renderer.closePath();
+        }
+
+        // console.log(this.xRotation);
+        // this.model.f.forEach(polygon => {
+
+            
+        //     const line1 = new Vector3D(
+        //         projectedTriangle.p2.x - projectedTriangle.p1.x, 
+        //         projectedTriangle.p2.y - projectedTriangle.p1.y, 
+        //         projectedTriangle.p2.z - projectedTriangle.p1.z
+        //     );
+
+        //     const line2 = new Vector3D(
+        //         projectedTriangle.p3.x - projectedTriangle.p1.x, 
+        //         projectedTriangle.p3.y - projectedTriangle.p1.y, 
+        //         projectedTriangle.p3.z - projectedTriangle.p1.z
+        //     );
+
+        //     const normal = new Vector3D(
+        //         line1.y * line2.z - line1.z * line2.y,
+        //         line1.z * line2.x - line1.x * line2.z,
+        //         line1.x * line2.y - line1.y * line2.x
+        //     );
+
+        //     const l = Math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+            
+        //     normal.divide(l);
+
+        //     let dotProduct;
+        //     if(dotProduct = normal.getDotProduct(projectedTriangle.p1.getSubtracted(this.camera)) < 0) {
+
+        //     // let newTriangle = translatedTriangle;
+        //         projectedTriangle.p1 = this.multiplyMatrixVector(projectedTriangle.p1, this.projectionMatrix);
+        //         projectedTriangle.p2 = this.multiplyMatrixVector(projectedTriangle.p2, this.projectionMatrix);
+        //         projectedTriangle.p3 = this.multiplyMatrixVector(projectedTriangle.p3, this.projectionMatrix);
+
+        //         // console.log(projectedTriangle.p3.z);
+        //         projectedTriangle.p1.x += 1;
+        //         projectedTriangle.p2.x += 1;
+        //         projectedTriangle.p3.x += 1;
+        //         projectedTriangle.p1.x *= .25 * this.screenWidth;
+        //         projectedTriangle.p1.y *= .25 * this.screenHeight;
+
+        //         projectedTriangle.p2.x *= .25 * this.screenWidth;
+        //         projectedTriangle.p2.y *= .25 * this.screenHeight;
+
+        //         projectedTriangle.p3.x *= .25 * this.screenWidth;
+        //         projectedTriangle.p3.y *= .25 * this.screenHeight;
+
+        //         const lightSource = new Vector3D(0, 0, -1);
+        //         const l = lightSource.getNormalized();
+        //         // console.log(l);
+        //         const dp = l.getDotProduct(normal);
+        //                 // if(normal.z < 0) {
+        //         const color = this.getColor(dp);
+               
+        //         this.renderer.beginPath();
+        //         this.renderer.moveTo(projectedTriangle.p1.x, projectedTriangle.p1.y);
+        //         this.renderer.lineTo(projectedTriangle.p2.x, projectedTriangle.p2.y);
+        //         this.renderer.lineTo(projectedTriangle.p3.x, projectedTriangle.p3.y);
+        //         this.renderer.lineTo(projectedTriangle.p1.x, projectedTriangle.p1.y);
+        //         this.renderer.fillStyle = color;
+        //         this.renderer.strokeStyle = color;
+        //         this.renderer.fill();
+        //         this.renderer.stroke();
+        //         this.renderer.closePath();
+        //     } 
+        // })
+    }
     getColor(value) {
         // console.log(value);
         const color = value * 128;
@@ -275,6 +385,7 @@ class Testing {
 
     multiplyMatrixVector(vector, matrix) {
         // Matrix rotation
+        // console.log(vector);
         let w = vector.x * matrix.contents[0][3] + vector.y * matrix.contents[1][3] + vector.z * matrix.contents[2][3] + matrix.contents[3][3];
         if (w === 0) w = 1; 
         return new Vector3D(
@@ -292,9 +403,9 @@ const update = () => {
     testing.update();
 }
 
-// setInterval(() => update(), 1000/24);
+setInterval(() => update(), 1000/24);
 
-console.log("test");
+// console.log("test");
 
 // let txt = '';
 // let xmlhttp = new XMLHttpRequest();
@@ -357,16 +468,125 @@ console.log("test");
 //   }
 
 // fileReader.readAsText(modelFile);
+        let model = {
+            v: [],
+            vn: [],
+            vt: [],
+            f: [],
+            // usemtl ignored
+        }
 
-fetch('Tie_Fighter.obj')
+const tiefighter = (fetch('Tie_Fighter.obj')
   .then(response => response.text())
   .then(text => {
-      for(let i = 0; i < text.length; i++) {
-        if(text.charAt(i)==="\r") { console.log("r is it"); break; }
-        if(text.charAt(i)==="\n") { console.log("n is it"); break };
+        
 
-        // console.log(text.charAt(i));
-      }
-    // console.log(text);
-  } )
+
+        let position = 0;
+        // console.log("model initialized...");
+        // break;
+
+        while(position < text.length) {
+            switch(text.substr(position, 2)) {
+                case "o ":
+                    // console.log("o");
+                    break;
+                case "vt":
+                    break;
+                case "vn":
+                    break;
+                case "f ":
+
+                    let polygonArray = [];
+                    position+=2;
+
+                    while(true) {
+                        let numberString = "";
+                        // let currentNumbers = [];
+                        // let numberString = "";
+                        
+                        while(text.charAt(position)!=='/' 
+                            && text.charAt(position)!==" "
+                            && text.charAt(position)!=='\n') {
+                                numberString += text.charAt(position);
+                                position++;
+                        }                           
+                        if(text.charAt(position)==='/') {
+                            while(text.charAt(position)!==' ' 
+                            && text.charAt(position)!=='\n') position++;
+                        }
+                        // if(model.v[Number(numberString-1)]===undefined) console.log(Number(numberString-1));
+                        polygonArray.push(model.v[Number(numberString-1)]);
+                        if(text.charAt(position)==='\n') break;
+                        position++; 
+                        // iteration++;
+                    }
+                    model.f.push(new Polygon(polygonArray));
+                    break;
+                
+                case "v ":
+
+                    position+=2;
+                    let currentNumbers = [];
+                    // let iteration = 0;
+
+                    while(true) {
+                        let numberString = "";
+                        while(text.charAt(position)!=='/' 
+                            && text.charAt(position)!==" "
+                            && text.charAt(position)!=='\n') {
+                                numberString += text.charAt(position);
+                                position++;
+                        }                           
+                        if(text.charAt(position)!=='/'){
+                            while(text.charAt(position)!==' ' 
+                            && text.charAt(position)!=='\n') position++;
+                        }
+                        currentNumbers.push(numberString);
+                        if(text.charAt(position)==='\n') break;
+                        position++; 
+                        // iteration++;
+                    
+                    }
+                    // if(currentNumbers[0] === undefined) console.log("UNDEFINED!!!!");
+                    model.v.push(new Vector3D(Number(currentNumbers[0]), Number(currentNumbers[1]), Number(currentNumbers[2])));
+                    // console.log(model);
+                    // model.v.push(Number(numberString));
+                    // console.log(model)
+                    // error;
+                    // v++;
+                    break;
+                case "us":
+                    // usemtl
+                    break;
+                case "# ":
+                default:             
+                    while(text.charAt(position) !== "\n" && position < text.length) position++;
+                    break;
+
+            }
+            position++;
+        }
+        // console.log(v, vt, vn , f, o, usemtl, comment, usemtl + v + vt + vn + f + o + comment, text.length);
+        // console.log(model);
+        // return model;
+    })
+    .then (() => {
+        // testing.theta += 1 * testing.deltaTime;
+        // testing.setRotation();
+        // testing.viewport.clear();
+        // testing.renderer.save();
+        // // testing.renderer.translate(100, 300);
+        // testing.renderModel(model);
+        // testing.render();
+        // testing.renderer.restore();
+        () => setInterval(() => update(), 1000/24)
+    })
+);
+
+// console.log(tiefighter)
+
+
+
+
   
